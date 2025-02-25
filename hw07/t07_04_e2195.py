@@ -1,13 +1,16 @@
 import re
 
 class HashTable:
-    def __init__(self, size=2003):
+    def __init__(self, size=100003):
         self.size = size
         self.table = [None] * self.size
         self.count = 0
 
     def _hash(self, key):
-        return sum(ord(c) for c in key) % self.size
+        h = 0
+        for char in key:
+            h = h * 31 + ord(char)
+        return h % self.size
 
     def insert(self, key):
         index = self._hash(key)
@@ -34,15 +37,14 @@ def clean_word(word):
 def check_text(dictionary, text):
     known_words = HashTable()
     for word in dictionary:
-        known_words.insert(clean_word(word))
+        known_words.insert(word)
 
     text_words = set()
     for line in text:
-        for word in line.split():
-            cleaned_word = clean_word(word)
-            text_words.add(cleaned_word)
+        for word in re.findall(r"\b[a-zA-Z]+\b", line):
+            text_words.add(clean_word(word))
 
-    missing_in_text = {word for word in dictionary if clean_word(word) not in text_words}
+    missing_in_text = {word for word in dictionary if word not in text_words}
     unknown_in_text = {word for word in text_words if not known_words.exists(word)}
 
     if not unknown_in_text and not missing_in_text:
@@ -58,7 +60,7 @@ if __name__ == "__main__":
         data = f.readline().split()
         n, m = int(data[0]), int(data[1])
 
-        dictionary = [f.readline().strip() for _ in range(n)]
+        dictionary = [clean_word(f.readline().strip()) for _ in range(n)]
         text = [f.readline().strip() for _ in range(m)]
 
     print(check_text(dictionary, text))
